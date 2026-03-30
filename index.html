@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مساعد الطلاب الذكي</title>
+<style>
+  body {
+    margin:0;
+    font-family: Arial;
+    background:#000;
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+  }
+  header {
+    width:100%;
+    display:flex;
+
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 20px;
+    background:#111;
+  }
+  h1 { margin:0; color:#8A2BE2; }
+  .hamburger { font-size:24px; cursor:pointer; }
+  #menu {
+    position:absolute;
+    top:50px;
+    right:20px;
+    background:#111;
+    border:1px solid #8A2BE2;
+    border-radius:10px;
+    display:none;
+    flex-direction:column;
+    padding:10px;
+    z-index:100;
+  }
+  #menu button {
+    margin:5px 0;
+
+    padding:10px;
+    background:#222;
+    border:none;
+    color:#fff;
+    cursor:pointer;
+    border-radius:5px;
+  }
+  #menu button:hover { background:#8A2BE2; }
+  
+  /* صندوق النص */
+  #userQuestion {
+    width:100%;
+    max-width:500px;
+    padding:12px 20px;
+    border:2px solid #8A2BE2;
+    border-radius:10px;
+    background:#111;
+    color:#fff;
+    outline:none;
+    transition: all 0.3s;
+  }
+
+  #userQuestion:focus {
+    box-shadow: 0 0 15px rgba(138,43,226,0.8); /* Glow حول الصندوق فقط */
+  }
+  
+  /* زر الإرسال */
+  #askButton {
+    margin-top:15px;
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    background:#8A2BE2;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+  }
+  #askButton:hover {
+    background:#7a23d6;
+    box-shadow:none; /* بدون glow */
+  }
+
+  
+  #botReply {
+    margin-top:20px;
+    padding:15px;
+    max-width:500px;
+    width:100%;
+    background:#111;
+    border-radius:10px;
+    border:1px solid #8A2BE2;
+    min-height:50px;
+    white-space:pre-wrap;
+  }
+  
+  #history {
+    display:none;
+    max-width:500px;
+    margin-top:20px;
+    background:#111;
+    border:1px solid #8A2BE2;
+    border-radius:10px;
+    padding:10px;
+  }
+
+  
+  footer {
+    margin-top:auto;
+    padding:10px;
+    color:#888;
+  }
+  
+  @media(max-width:600px){
+    #userQuestion,#botReply{width:90%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>مساعد الطلاب الذكي</h1>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <div id="menu">
+    <button onclick="showHistory()">المحادثات السابقة</button>
+    <button onclick="changeLang()">تغيير 
+
+اللغة</button>
+  </div>
+</header>
+
+<input type="text" id="userQuestion" placeholder="اكتب سؤالك هنا">
+<button id="askButton">اسأل البوت</button>
+
+<div id="botReply">هنا يظهر رد البوت...</div>
+<div id="history"></div>
+
+<footer>صنع بواسطة أحمد قريز</footer>
+
+<script>
+const WEBHOOK_URL = "https://a7mdlo0.app.n8n.cloud/webhook/student-helper";
+let lang = "ar"; // 'ar' أو 'en'
+let conversation = [];
+
+function toggleMenu(){ 
+  const menu = 
+
+document.getElementById("menu");
+  menu.style.display = menu.style.display==="flex"?"none":"flex";
+}
+
+function showHistory(){
+  const histDiv = document.getElementById("history");
+  histDiv.style.display = histDiv.style.display==="block"?"none":"block";
+  histDiv.innerHTML = conversation.map((c,i)=>`<b>سؤال ${i+1}:</b> ${c.user}<br><b>رد:</b> ${c.bot}<hr>`).join("");
+}
+
+function changeLang(){ 
+  lang = (lang==="ar")?"en":"ar"; 
+  alert("تم تغيير اللغة إلى "+(lang==="ar"?"العربية":"الإنجليزية"));
+}
+
+
+async function askBot(question){
+  try{
+    const response = await fetch(WEBHOOK_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message:question, lang:lang})
+    });
+    const data = await response.json();
+    document.getElementById("botReply").innerText = data.reply;
+    conversation.push({user:question, bot:data.reply});
+  }catch(err){
+    console.error(err);
+    document.getElementById("botReply").inne
+
+rText = "حصل خطأ أثناء الاتصال بالبوت.";
+  }
+}
+
+document.getElementById("askButton").addEventListener("click", ()=>{
+  const userQuestion = document.getElementById("userQuestion").value.trim();
+  if(userQuestion){askBot(userQuestion); document.getElementById("userQuestion").value="";}
+});
+document.getElementById("userQuestion").addEventListener("keypress",(e)=>{
+  if(e.key==="Enter"){document.getElementById("askButton").click();}
+});
+</script>
+
+</body>
+
+</html>
