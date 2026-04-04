@@ -91,7 +91,7 @@ def student_bot_webhook():
             # Send to Groq
             try:
                 response = client.chat.completions.create(
-                    model="llama-3.1-70b-versatile",
+                    model="llama-3.3-70b-versatile",
                     messages=[
                         {
                             "role": "system",
@@ -121,7 +121,7 @@ def student_bot_webhook():
             return jsonify({"error": "No message provided"}), 400
         
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
