@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Helper - Your AI Study Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🎓</span>
+                    <h1 class="logo-text">Student Helper</h1>
+                </div>
+                <div class="header-subtitle">Your AI Study Assistant</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Quick Action Buttons -->
+            <section class="quick-actions">
+                <div class="quick-actions-grid">
+                    <button class="quick-btn" data-action="pdf">
+                        <span class="quick-btn-icon">📘</span>
+                        <span class="quick-btn-text">Get PDF</span>
+                    </button>
+                    <button class="quick-btn" data-action="summarize">
+                        <span class="quick-btn-icon">📖</span>
+                        <span class="quick-btn-text">Summarize</span>
+                    </button>
+                    <button class="quick-btn" data-action="explain">
+                        <span class="quick-btn-icon">🧠</span>
+                        <span class="quick-btn-text">Explain</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Chat Container -->
+            <section class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="message bot-message fade-in">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                Hello! I'm your Student Helper AI. I can help you find study materials, summarize topics, and explain concepts. How can I assist you today?
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div class="loading-indicator" id="loadingIndicator">
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="loading-text">Thinking...</div>
+                </div>
+            </section>
+
+            <!-- Input Area -->
+            <section class="input-area">
+                <form class="input-form" id="inputForm">
+                    <div class="input-container">
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="Ask me anything about your studies..."
+                            rows="1"
+                            maxlength="1000"
+                        ></textarea>
+                        <button type="submit" class="send-button" id="sendButton" disabled>
+                            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-footer">
+                        <span class="character-count" id="characterCount">0 / 1000</span>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© 2024 Student Helper. Made with ❤️ for students.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
