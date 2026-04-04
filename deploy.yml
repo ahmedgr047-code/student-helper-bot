@@ -1,0 +1,99 @@
+# =============================================================================
+# GitHub Actions Workflow for Student Helper Bot
+# Engineering & Networks Specialization - Secure Deployment Pipeline
+# =============================================================================
+#
+# IMPORTANT: Before running this workflow, configure the secret in GitHub:
+#   1. Go to: Settings → Secrets and variables → Actions
+#   2. Click: New repository secret
+#   3. Name: GROQ_API_KEY
+#   4. Value: Your actual Groq API key (e.g., gsk_...)
+#   5. Click: Add secret
+#
+# This workflow will:
+#   - Inject the API key into the code during deployment
+#   - Deploy the static site to GitHub Pages automatically
+# =============================================================================
+
+name: Deploy to GitHub Pages
+
+# Trigger deployment on push to main branch
+on:
+  push:
+    branches: [main]
+  
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+# Permissions required for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Environment configuration for GitHub Pages
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================================================
+  # Build Job: Prepare the code with injected secrets
+  # ==========================================================================
+  build:
+    name: Build Site with API Key Injection
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # Step 2: Inject GROQ API Key into JavaScript file
+      # This replaces the placeholder "REPLACE_WITH_GROQ_API_KEY" with the
+      # actual secret stored in GitHub Secrets
+      - name: Inject API Key into script.js
+        run: |
+          echo "Injecting GROQ API Key into script.js..."
+          sed -i 's/REPLACE_WITH_GROQ_API_KEY/${{ secrets.GROQ_API_KEY }}/g' script.js
+          echo "API Key injection completed successfully!"
+      
+      # Step 3: Verify the injection (security check - mask the key)
+      - name: Verify API Key Injection
+        run: |
+          echo "Verifying API key was injected..."
+          if grep -q "REPLACE_WITH_GROQ_API_KEY" script.js; then
+            echo "ERROR: Placeholder still found in script.js"
+            exit 1
+          else
+            echo "SUCCESS: Placeholder replaced with actual API key"
+          fi
+      
+      # Step 4: Setup GitHub Pages for deployment
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+      
+      # Step 5: Upload site files for deployment
+      # Note: This uploads all HTML, CSS, JS files to GitHub Pages
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'  # Deploy entire repository root
+
+  # ==========================================================================
+  # Deploy Job: Publish to GitHub Pages
+  # ==========================================================================
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      # Deploy the uploaded artifact to GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

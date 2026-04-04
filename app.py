@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Groq API Key from environment variable
-client = Groq(api_key=os.getenv("GROQ_API_KEY", "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"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY", "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"))
 
 # Create required folders in /tmp for Vercel compatibility
 UPLOAD_FOLDER = '/tmp/uploads'

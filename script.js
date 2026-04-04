@@ -26,8 +26,10 @@ const editUsername = document.getElementById('editUsername');
 const editLanguage = document.getElementById('editLanguage');
 const saveSettings = document.getElementById('saveSettings');
 
-// Configuration - Backend URL
+// Configuration - Backend URL and API Settings
 const WEBHOOK_URL = 'https://student-helper-bot.vercel.app/webhook-test/student-bot';
+const API_KEY = 'REPLACE_WITH_GROQ_API_KEY'; // Injected by GitHub Actions during deployment
+const MODEL_NAME = 'llama-3.3-70b-versatile';
 const MAX_CHARACTERS = 1000;
 
 // State
@@ -306,6 +308,8 @@ async function getBotResponse(userMessage, retryCount = 0) {
                     message: personalizedMessage,
                     username: currentUser?.username || '',
                     language: lang,
+                    model: MODEL_NAME,  // Model specification for Groq API
+                    apiKey: API_KEY,    // Injected secret key for authentication
                     timestamp: new Date().toISOString()
                 })
             }, 30000);
