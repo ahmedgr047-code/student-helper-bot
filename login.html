@@ -32,29 +32,44 @@
                     </select>
                 </div>
                 
+                <div id="loginError" class="login-error" style="display: none;"></div>
+                
                 <button type="submit" class="login-btn">دخول</button>
             </form>
+            
+            <div class="login-footer">
+                <a href="#" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
+            </div>
             
             <p class="login-hint">لا تحتاج كلمة مرور - فقط أدخل اسمك للبدء</p>
         </div>
     </div>
     
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const language = document.getElementById('language').value;
-            
-            // Save user data
-            localStorage.setItem('studentHelper_user', JSON.stringify({
-                username: username,
-                language: language,
-                loginTime: new Date().toISOString()
-            }));
-            
-            // Redirect to main app
-            window.location.href = 'index.html';
-        });
-    </script>
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إعادة تعيين كلمة المرور</h2>
+                <button class="close-btn" id="closeForgotPassword">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="resetEmail">البريد الإلكتروني</label>
+                    <input type="email" id="resetEmail" placeholder="أدخل بريدك الإلكتروني" required>
+                </div>
+                <button id="sendResetCode" class="login-btn">إرسال رمز التحقق</button>
+                <div id="resetCodeContainer" style="display: none; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="resetCode">رمز التحقق</label>
+                        <input type="text" id="resetCode" placeholder="أدخل رمز التحقق" required>
+                    </div>
+                    <button id="verifyCode" class="login-btn">تأكيد</button>
+                </div>
+                <div id="resetError" class="login-error" style="display: none; margin-top: 0.5rem;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="login.js"></script>
 </body>
 </html>

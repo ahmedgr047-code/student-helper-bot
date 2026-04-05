@@ -32,6 +32,34 @@ const API_KEY = 'REPLACE_WITH_GROQ_API_KEY'; // Injected by GitHub Actions durin
 const MODEL_NAME = 'llama-3.3-70b-versatile';
 const MAX_CHARACTERS = 1000;
 
+// GitHub Repository Configuration for Dynamic Folder Access
+// IMPORTANT: Set these in GitHub Secrets or update manually
+const GITHUB_OWNER = 'YOUR_GITHUB_USERNAME'; // Replace with your GitHub username
+const GITHUB_REPO = 'YOUR_REPO_NAME';          // Replace with your repository name
+const GITHUB_BRANCH = 'main';                  // Branch containing the folders
+
+// Subject to Folder mapping for quick access
+const SUBJECT_FOLDERS = {
+    'شبكات': 'networks',
+    'networks': 'networks',
+    'الشبكات': 'networks',
+    'برمجة': 'programming',
+    'programming': 'programming',
+    'البرمجة': 'programming',
+    'قواعد بيانات': 'databases',
+    'databases': 'databases',
+    'قواعد البيانات': 'databases',
+    'أمن': 'security',
+    'security': 'security',
+    'الأمن السيبراني': 'security',
+    'ذكاء اصطناعي': 'ai',
+    'ai': 'ai',
+    'الذكاء الاصطناعي': 'ai',
+    'هندسة': 'engineering',
+    'engineering': 'engineering',
+    'الهندسة': 'engineering'
+};
+
 // State
 let isLoading = false;
 let currentFile = null;
@@ -167,63 +195,163 @@ function closeSettingsModal() {
     settingsModal.classList.remove('active');
 }
 
-// Start New Chat
-function startNewChat() {
-    // Save current chat to history if has messages
+// 2. إنشاء دردشة جديدة وتحزين السابقة
+function createNewChat() {
+    const currentMessages = chatMessages.innerHTML;
+    const chats = JSON.parse(localStorage.getItem('chats')) || [];
+    
+    // Save current chat if it has messages (more than welcome message)
     if (chatMessages.children.length > 1) {
-        const chatTitle = chatHistory.length === 0 ? 'دردشة 1' : `دردشة ${chatHistory.length + 1}`;
-        chatHistory.push({
-            title: chatTitle,
-            date: new Date().toLocaleDateString(),
-            messages: chatMessages.innerHTML
+        chats.push({ 
+            id: Date.now(), 
+            messages: currentMessages,
+            timestamp: new Date().toLocaleString()
         });
-        updatePreviousChatsList();
+        localStorage.setItem('chats', JSON.stringify(chats));
     }
     
-    // Clear chat messages except welcome
+    // Clear and start new chat
     chatMessages.innerHTML = `
         <div class="message bot-message fade-in">
             <div class="message-avatar">🤖</div>
             <div class="message-content">
                 <div class="message-text" id="botWelcomeMessage">
-                    ${botWelcomeMessage.textContent}
+                    مرحباً! هذه دردشة جديدة. كيف يمكنني مساعدتك اليوم؟
                 </div>
             </div>
         </div>
     `;
     currentFile = null;
+    
+    const lang = currentUser?.language || 'ar';
+    const message = lang === 'ar' 
+        ? 'تم إنشاء دردشة جديدة!'
+        : 'New chat created!';
+    addMessage(message, 'bot');
+}
+
+// Start New Chat (alias for createNewChat)
+function startNewChat() {
+    createNewChat();
+}
+
+// 3. عرض الدردشات السابقة في modal
+function showPreviousChats() {
+    const chats = JSON.parse(localStorage.getItem('chats')) || [];
+    
+    if (chats.length === 0) {
+        const lang = currentUser?.language || 'ar';
+        const message = lang === 'ar' 
+            ? 'لا توجد دردشات سابقة'
+            : 'No previous chats';
+        addMessage(message, 'bot');
+        return;
+    }
+    
+    // Create modal for previous chats
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'previousChatsModal';
+    
+    const lang = currentUser?.language || 'ar';
+    const title = lang === 'ar' ? 'الدردشات السابقة' : 'Previous Chats';
+    
+    let chatListHtml = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>${title}</h2>
+                <button class="close-btn" id="closePreviousChats">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="previous-chats-list">
+    `;
+    
+    chats.forEach((chat, index) => {
+        const chatName = lang === 'ar' 
+            ? `دردشة ${new Date(chat.id).toLocaleString()}`
+            : `Chat ${new Date(chat.id).toLocaleString()}`;
+        chatListHtml += `
+            <div class="chat-item" data-index="${index}">
+                <span class="menu-icon">💬</span>
+                <span>${chatName}</span>
+            </div>
+        `;
+    });
+    
+    chatListHtml += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = chatListHtml;
+    document.body.appendChild(modal);
+    
+    // Add click listeners
+    modal.querySelectorAll('.chat-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const index = parseInt(item.dataset.index);
+            const chat = chats[index];
+            if (chat) {
+                chatMessages.innerHTML = chat.messages;
+                document.body.removeChild(modal);
+                closeMenu();
+            }
+        });
+    });
+    
+    // Close button
+    document.getElementById('closePreviousChats').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
 }
 
 // Update Previous Chats List
 function updatePreviousChatsList() {
     const previousChats = document.getElementById('previousChats');
-    if (chatHistory.length === 0) {
+    const chats = JSON.parse(localStorage.getItem('chats')) || [];
+    
+    if (chats.length === 0) {
         previousChats.innerHTML = '<div class="no-chats">لا توجد دردشات سابقة</div>';
         return;
     }
     
-    previousChats.innerHTML = chatHistory.map((chat, index) => `
-        <div class="menu-item previous-chat" data-index="${index}">
-            <span class="menu-icon">💬</span>
-            <div>
-                <div>${chat.title}</div>
-                <small style="color: var(--text-secondary);">${chat.date}</small>
+    previousChats.innerHTML = chats.map((chat, index) => {
+        const chatName = `دردشة ${new Date(chat.id).toLocaleString()}`;
+        return `
+            <div class="menu-item previous-chat" data-index="${index}">
+                <span class="menu-icon">💬</span>
+                <div>
+                    <div>${chatName}</div>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
     
     // Add click listeners
     document.querySelectorAll('.previous-chat').forEach(item => {
         item.addEventListener('click', () => {
             const index = parseInt(item.dataset.index);
-            loadChat(index);
+            const chat = chats[index];
+            if (chat) {
+                chatMessages.innerHTML = chat.messages;
+                closeMenu();
+            }
         });
     });
 }
 
-// Load Previous Chat
+// Load Previous Chat (legacy - now handled in updatePreviousChatsList)
 function loadChat(index) {
-    const chat = chatHistory[index];
+    const chats = JSON.parse(localStorage.getItem('chats')) || [];
+    const chat = chats[index];
     if (chat) {
         chatMessages.innerHTML = chat.messages;
         closeMenu();
@@ -253,7 +381,15 @@ function setupEventListeners() {
     
     // Input events
     messageInput.addEventListener('input', handleInputChange);
-    messageInput.addEventListener('keydown', handleKeyDown);
+    
+    // 1. Send message on Enter (without Shift)
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            inputForm.dispatchEvent(new Event('submit'));
+        }
+        handleKeyDown(e);
+    });
     
     // Quick action buttons
     quickButtons.forEach(button => {
@@ -378,6 +514,149 @@ async function fetchWithTimeout(url, options, timeout = 30000) {
     }
 }
 
+// =============================================================================
+// GITHUB CONTENTS API - Dynamic Folder Fetching
+// Engineering & Networks Implementation
+// =============================================================================
+
+/**
+ * Detect subject from user message using keyword matching
+ * Returns the folder name or null if no match found
+ */
+function detectSubjectFromMessage(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check predefined subject mappings
+    for (const [keyword, folder] of Object.entries(SUBJECT_FOLDERS)) {
+        if (lowerMessage.includes(keyword.toLowerCase())) {
+            return folder;
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Fetch files from GitHub repository Contents API
+ * @param {string} folderName - Name of the folder to fetch (e.g., 'networks')
+ * @returns {Promise<Array>} - Array of file objects with name and download_url
+ */
+async function fetchFilesFromGithub(folderName) {
+    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${folderName}?ref=${GITHUB_BRANCH}`;
+    
+    try {
+        const response = await fetchWithTimeout(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Student-Helper-Bot'
+            }
+        }, 15000);
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error(`Folder '${folderName}' not found in repository`);
+            }
+            throw new Error(`GitHub API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Filter only PDF files
+        const pdfFiles = data
+            .filter(item => item.type === 'file' && item.name.toLowerCase().endsWith('.pdf'))
+            .map(file => ({
+                name: file.name,
+                download_url: file.download_url,
+                size: file.size,
+                path: file.path
+            }));
+        
+        return pdfFiles;
+        
+    } catch (error) {
+        console.error('GitHub API Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Format file list response for the user
+ * @param {Array} files - Array of file objects
+ * @param {string} subjectName - Name of the subject (for display)
+ * @param {string} lang - Language code ('ar' or 'en')
+ * @returns {string} - Formatted response message
+ */
+function formatFileListResponse(files, subjectName, lang) {
+    if (files.length === 0) {
+        return lang === 'ar' 
+            ? `📂 لا توجد ملفات PDF متاحة في مادة ${subjectName} حالياً.`
+            : `📂 No PDF files available for ${subjectName} at the moment.`;
+    }
+    
+    const header = lang === 'ar'
+        ? `📚 إليك كل ملفات مادة ${subjectName} المتاحة:`
+        : `📚 Here are all available files for ${subjectName}:`;
+    
+    const fileList = files.map((file, index) => {
+        const sizeKB = (file.size / 1024).toFixed(1);
+        return `${index + 1}. [${file.name}](${file.download_url}) (${sizeKB} KB)`;
+    }).join('\n');
+    
+    const footer = lang === 'ar'
+        ? '\n\n💡 اضغط على أي رابط لتحميل الملف مباشرة.'
+        : '\n\n💡 Click any link to download the file directly.';
+    
+    return `${header}\n\n${fileList}${footer}`;
+}
+
+/**
+ * Handle subject/folder query from user
+ * Main entry point for dynamic folder fetching
+ */
+async function handleSubjectQuery(userMessage) {
+    const lang = currentUser?.language || 'ar';
+    
+    try {
+        // Step 1: Detect subject from message
+        const detectedFolder = detectSubjectFromMessage(userMessage);
+        
+        if (!detectedFolder) {
+            // No subject detected - return null to let normal bot response handle it
+            return null;
+        }
+        
+        // Step 2: Show loading state
+        showLoading(true);
+        
+        // Step 3: Fetch files from GitHub
+        const files = await fetchFilesFromGithub(detectedFolder);
+        
+        // Step 4: Format and return response
+        const subjectDisplayName = lang === 'ar' 
+            ? Object.keys(SUBJECT_FOLDERS).find(k => SUBJECT_FOLDERS[k] === detectedFolder && k.length > 3) || detectedFolder
+            : detectedFolder;
+        
+        const response = formatFileListResponse(files, subjectDisplayName, lang);
+        
+        return response;
+        
+    } catch (error) {
+        console.error('Subject Query Error:', error);
+        
+        const errorMsg = lang === 'ar'
+            ? `❌ عذراً، لم أتمكن من جلب الملفات: ${error.message}`
+            : `❌ Sorry, couldn't fetch files: ${error.message}`;
+        
+        return errorMsg;
+        
+    } finally {
+        showLoading(false);
+    }
+}
+
+// =============================================================================
+
 // Generate mock response for testing when backend is unavailable
 function generateMockResponse(message, lang) {
     const username = currentUser?.username || '';
@@ -419,7 +698,16 @@ async function handleSubmit(e) {
     // Add user message
     addMessage(message, 'user');
     
-    // Show loading and get response
+    // Step 1: Try to handle as subject query first (GitHub folder fetch)
+    const subjectResponse = await handleSubjectQuery(message);
+    
+    if (subjectResponse) {
+        // It's a subject query - display the file list response
+        addMessage(subjectResponse, 'bot');
+        return;
+    }
+    
+    // Step 2: Not a subject query - proceed with normal bot response
     await getBotResponse(message);
 }
 

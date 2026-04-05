@@ -611,7 +611,85 @@ body {
     text-align: right;
 }
 
-/* --- التحميل --- */
+/* تحسين مساحة الإدخال */
+.input-area {
+    padding: 1.2rem 1rem;
+}
+
+.message-input {
+    width: 100%;
+    padding: 1rem 4rem 1rem 1.5rem;
+}
+
+/* إخفاء مؤشر العد من اليمين */
+.character-count {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* تحسين قائمة البرجر */
+.mobile-menu {
+    width: 80%;
+}
+
+/* Footer styles */
+.footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--bg-tertiary);
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.footer-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Previous chats list styles */
+.previous-chats-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.chat-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.chat-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-primary);
+}
+
+/* Login footer and forgot password */
+.login-footer {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.login-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.login-error {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
 .loading-indicator {
     display: none;
     flex-direction: column;
